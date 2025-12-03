@@ -8,7 +8,7 @@ import se.sti.employee_registry.security.rules.RolesRules;
 import se.sti.employee_registry.user.authority.UserRole;
 
 import java.util.Set;
-
+//TODO Serielaisoenon för att göra om till strängar, oauth2 och rs istället för hs
 public record CustomUserDetailsDTO(
 
 
