@@ -27,6 +27,7 @@ public class CustomUserMapper {
 
     public CustomUserResponseDTO toResponseDTO(CustomUser customUser) {
         return new CustomUserResponseDTO(
+                customUser.getId(),
                 new FirstnameRules(customUser.getFirstName()),
                 new LastnameRules(customUser.getLastName()),
                 new EmailRules(customUser.getEmail()),
