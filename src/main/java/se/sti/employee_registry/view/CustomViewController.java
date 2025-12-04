@@ -1,91 +1,85 @@
 package se.sti.employee_registry.view;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import se.sti.employee_registry.user.CustomUser;
 import se.sti.employee_registry.user.CustomUserRepository;
 import se.sti.employee_registry.user.authority.UserRole;
 import se.sti.employee_registry.user.dto.CustomUserCreationDTO;
+import se.sti.employee_registry.user.dto.CustomUserLoginDTO;
 import se.sti.employee_registry.user.dto.CustomUserResponseDTO;
 import se.sti.employee_registry.user.mapper.CustomUserMapper;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
-@Controller
+@RestController
+@RequestMapping("/api/users")
 public class CustomViewController {
+
     private final CustomUserRepository customUserRepository;
-    private final PasswordEncoder passwordEncoder;
     private final CustomUserMapper customUserMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    CustomViewController(CustomUserRepository customUserRepository, PasswordEncoder passwordEncoder, CustomUserMapper customUserMapper) {
+    public CustomViewController(
+            CustomUserRepository customUserRepository,
+            CustomUserMapper customUserMapper,
+            PasswordEncoder passwordEncoder
+    ) {
         this.customUserRepository = customUserRepository;
-        this.passwordEncoder = passwordEncoder;
         this.customUserMapper = customUserMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    @GetMapping("/login")
-    public String loginPage() {
-        return "login";
+    @PostMapping("/login")
+    public void login(@RequestBody @Valid CustomUserLoginDTO dto) {
     }
 
-    @GetMapping("/logout")
-    public String logoutPage() {
-        return "logout";
+    @PostMapping("/logout")
+    public void logout() {
     }
 
     @GetMapping("/admin")
     public String adminPage() {
-        return "admin";
+        return "Admin access granted";
     }
 
-    @GetMapping("/user")
-    public String userPage() {
-        return "user";
+    @DeleteMapping("/admin/delete/{id}")
+    public ResponseEntity<Void> adminDelete(@PathVariable UUID id) {
+        if (!customUserRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        customUserRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/register")
-    public String registerUser(
-            @Valid CustomUserCreationDTO customUserCreationDTO, BindingResult bindingResult
-            ) {
+    public ResponseEntity<Void> registerUser(
+            @Valid @RequestBody CustomUserCreationDTO dto,
+            BindingResult bindingResult
+    ) {
         if (bindingResult.hasErrors()) {
-            return "registerpage";
+            return ResponseEntity.badRequest().build();
         }
-        CustomUser customUser = customUserMapper.toEntity(customUserCreationDTO);
 
-        customUser.setPassword(
-                customUser.getPassword(),
-                passwordEncoder
-        );
+        CustomUser user = customUserMapper.toEntity(dto);
+        user.setPassword(user.getPassword(), passwordEncoder);
+        user.setRoles(Set.of(UserRole.EMPLOYEE));
+        customUserRepository.save(user);
 
-        customUser.setRoles(
-                Set.of(UserRole.EMPLOYEE)
-        );
-
-        System.out.println("Saving user... ");
-        customUserRepository.save(customUser);
-
-        return "redirect:/user";
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/get-all")
-    public ResponseEntity<List<CustomUserResponseDTO>> getAll() {
-        List<CustomUser> employees = customUserRepository.findAll();
-        List<CustomUserResponseDTO> employeesDTO = employees.stream()
-                .map(employee -> customUserMapper.toResponseDTO(employee)
-
-                ).collect(Collectors.toList());
-        return ResponseEntity.ok(employeesDTO);
+    public List<CustomUserResponseDTO> getAll() {
+        return customUserRepository.findAll()
+                .stream()
+                .map(customUserMapper::toResponseDTO)
+                .toList();
     }
-
-
-
 }
