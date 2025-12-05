@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import se.sti.employee_registry.publisher.EmailPublisher;
 import se.sti.employee_registry.user.CustomUser;
 import se.sti.employee_registry.user.CustomUserRepository;
 import se.sti.employee_registry.user.authority.UserRole;
@@ -21,11 +22,13 @@ public class DebugRestController {
 
     private final PasswordEncoder passwordEncoder;
     private final CustomUserRepository customUserRepository;
+    private final EmailPublisher emailPublisher;
 
     @Autowired
-    public DebugRestController(PasswordEncoder passwordEncoder, CustomUserRepository repository) {
+    public DebugRestController(PasswordEncoder passwordEncoder, CustomUserRepository repository, EmailPublisher emailPublisher) {
         this.passwordEncoder = passwordEncoder;
         this.customUserRepository = repository;
+        this.emailPublisher = emailPublisher;
     }
 
     @GetMapping("/create-debug-user")
@@ -44,6 +47,8 @@ public class DebugRestController {
                             Set.of(UserRole.ADMIN)
                     )
             );
+            String username = "Benny";
+            emailPublisher.sendUserCreated("Benny123@gmail.com", "Benny");
 
             return ResponseEntity.status(HttpStatus.CREATED).body("User created successfully ");
         } catch (DataIntegrityViolationException e) {
