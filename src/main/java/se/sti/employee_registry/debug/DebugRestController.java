@@ -55,6 +55,33 @@ public class DebugRestController {
         }
     }
 
+    @GetMapping("/create-debug-user2")
+    public ResponseEntity<String> createDebugUser() {
+        try {
+            customUserRepository.save(
+                    new CustomUser(
+                            "Frida",
+                            "Smith",
+                            "Frida@gmail.com",
+                            passwordEncoder.encode("321"),
+                            true,
+                            true,
+                            true,
+                            true,
+                            Set.of(UserRole.EMPLOYEE)
+                    )
+            );
+
+            return ResponseEntity.status(HttpStatus.CREATED).body("User created successfully ");
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("User already exists " + e.getLocalizedMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Something went wrong " + e.getLocalizedMessage());
+        } finally {
+            System.out.println("Creating debug user - ENDED");
+        }
+    }
+
     @GetMapping("/who-am-i")
     public String whoAmI(Authentication authentication) {
         return "Hello " + authentication.getName() +

@@ -42,7 +42,6 @@ public class AuthenticationRestController {
             @RequestBody CustomUserLoginDTO customUserLoginDTO, HttpServletResponse response
     ) {
         logger.debug("Attempted authentication for user {}", customUserLoginDTO.email());
-
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         customUserLoginDTO.email(),
